@@ -1,6 +1,7 @@
 package org.romaframework.aspect.console;
 
 import java.io.IOException;
+import java.io.InputStreamReader;
 import java.io.Reader;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -103,7 +104,7 @@ public class DefaultConsoleAspect extends SelfRegistrantModule implements Consol
 				return;
 			}
 			exit = true;
-		} else if (mode == Mode.AUTO) {
+		} else if (mode == Mode.AUTO || mode == null) {
 			exit = args.length != 0;
 		} else {
 			exit = false;
@@ -131,10 +132,9 @@ public class DefaultConsoleAspect extends SelfRegistrantModule implements Consol
 			if (!exit) {
 				System.out.print('>');
 				args = readCommand();
+				if (args.length == 1 && "exit".equals(args[0]))
+					exit = true;
 			}
-			if (args.length == 1 && "exit".equals(args[0]))
-				exit = true;
-			System.out.println("Command:" + args[0]);
 		} while (!exit);
 	}
 
@@ -142,7 +142,12 @@ public class DefaultConsoleAspect extends SelfRegistrantModule implements Consol
 		List<String> params = new ArrayList<String>();
 		StringBuilder buff = new StringBuilder();
 		boolean inDouble = false, inSingle = false, escape = false;
-		Reader reader = System.console().reader();
+
+		Reader reader;
+		if (System.console() != null)
+			reader = System.console().reader();
+		else
+			reader = new InputStreamReader(System.in);
 		int ch;
 		try {
 			do {
