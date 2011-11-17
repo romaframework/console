@@ -10,7 +10,9 @@ import java.util.Map;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.romaframework.aspect.console.feature.ConsoleActionFeatures;
 import org.romaframework.aspect.console.feature.ConsoleClassFeatures;
+import org.romaframework.aspect.console.feature.ConsoleParameterFeatures;
 import org.romaframework.core.Roma;
 import org.romaframework.core.Utility;
 import org.romaframework.core.module.SelfRegistrantModule;
@@ -20,6 +22,7 @@ import org.romaframework.core.schema.SchemaClassDefinition;
 import org.romaframework.core.schema.SchemaClassResolver;
 import org.romaframework.core.schema.SchemaEvent;
 import org.romaframework.core.schema.SchemaField;
+import org.romaframework.core.schema.SchemaParameter;
 
 public class DefaultConsoleAspect extends SelfRegistrantModule implements ConsoleAspect {
 
@@ -76,16 +79,8 @@ public class DefaultConsoleAspect extends SelfRegistrantModule implements Consol
 		List<SchemaClass> classes = Roma.schema().getSchemaClassesByPackage(pack);
 
 		for (SchemaClass clazz : classes) {
-			String name;
-			if (clazz.isSettedFeature(ConsoleClassFeatures.NAME)) {
-				name = clazz.getFeature(ConsoleClassFeatures.NAME);
-			} else {
-				name = clazz.getName();
-			}
-			if (name != null) {
-				commands.put(name, new ClassCommands(clazz.getSchemaClass()));
-			}
-
+			ClassCommands comm = new ClassCommands(clazz.getSchemaClass());
+			commands.put(comm.getName(), comm);
 		}
 
 	}
@@ -115,16 +110,32 @@ public class DefaultConsoleAspect extends SelfRegistrantModule implements Consol
 				if (command == null) {
 					log.warn("Not Found command:" + args[0]);
 				} else {
-					SchemaAction action = command.getAction(args[1]);
-					if (action.getParameterNumber() != args.length - 2) {
-						log.warn("Wrong number of arguments was:" + args.length + " expected:" + (action.getParameterNumber() + 2));
+					ActionCommand commandAction = null;
+					int subLength = 2;
+					if (args.length > 1)
+						commandAction = command.getAction(args[1], args.length - 2);
+					else
+						subLength--;
+					if (commandAction == null) {
+						commandAction = command.getAction(command.getSchemaClass().getFeature(ConsoleClassFeatures.DEFAULT_ACTION), args.length - subLength);
+					}
+					if (commandAction == null) {
+						if (args.length > 1)
+							log.warn("Not Found command:" + args[1] + " in command: " + args[0]);
+						else
+							log.warn("Not Default command in command: " + args[0]);
 					} else {
-						Object[] actionArgs = new Object[action.getParameterNumber()];
-						System.arraycopy(args, 2, actionArgs, 0, action.getParameterNumber());
-						try {
-							action.invoke(command.getSchemaClass().newInstance(), actionArgs);
-						} catch (Exception e) {
-							log.error("Error on execute command:" + command, e);
+						SchemaAction action = commandAction.getAction();
+						if (action.getParameterNumber() != args.length - subLength) {
+							log.warn("Wrong number of arguments was:" + args.length + " expected:" + (action.getParameterNumber() + subLength));
+						} else {
+							Object[] actionArgs = new Object[action.getParameterNumber()];
+							System.arraycopy(args, subLength, actionArgs, 0, action.getParameterNumber());
+							try {
+								action.invoke(command.getSchemaClass().newInstance(), actionArgs);
+							} catch (Exception e) {
+								log.error("Error on execute command:" + command, e);
+							}
 						}
 					}
 				}
@@ -205,7 +216,6 @@ public class DefaultConsoleAspect extends SelfRegistrantModule implements Consol
 	}
 
 	protected void handleComplete(List<String> params, StringBuilder buff) {
-		// TODO Auto-generated method stub
 
 	}
 
@@ -222,4 +232,52 @@ public class DefaultConsoleAspect extends SelfRegistrantModule implements Consol
 		this.mode = mode;
 	}
 
+	public String buildHelp() {
+		StringBuilder builder = new StringBuilder();
+		for (ClassCommands command : commands.values()) {
+			builder.append(command.getName()).append(" ");
+			if (command.getSchemaClass().getFeature(ConsoleClassFeatures.DESCRIPTION) != null)
+				builder.append(command.getSchemaClass().getFeature(ConsoleClassFeatures.DESCRIPTION));
+			builder.append("\n\t");
+			for (ActionCommand action : command.getActions()) {
+				builder.append(" ").append(action.getName());
+			}
+			builder.append("\n");
+		}
+		return builder.toString();
+	}
+
+	public String buildHelpCommandGroup(String className) {
+		StringBuilder builder = new StringBuilder();
+		ClassCommands command = commands.get(className);
+		for (ActionCommand action : command.getActions()) {
+			builder.append(action.getName());
+			builder.append(" ").append(action.getAction().getFeature(ConsoleActionFeatures.DESCRIPTION)).append("\n\r");
+		}
+		return builder.toString();
+	}
+
+	public String buildHelpCommand(String className, String action) {
+		StringBuilder builder = new StringBuilder();
+		ClassCommands command = commands.get(className);
+		if (command == null) {
+			return buildHelp();
+		}
+		Map<Integer, ActionCommand> actions = command.getActions(action);
+		if (actions == null) {
+			return buildHelpCommandGroup(className);
+		} else {
+			for (ActionCommand ac : actions.values()) {
+				for (SchemaParameter parameter : ac.getAction().getParameters().values()) {
+					String pName = parameter.getFeature(ConsoleParameterFeatures.NAME);
+					if (pName != null) {
+						pName = parameter.getType().getName();
+					}
+					builder.append(pName);
+					builder.append(" ").append(parameter.getFeature(ConsoleParameterFeatures.DESCRIPTION)).append("\n\r");
+				}
+			}
+			return builder.toString();
+		}
+	}
 }

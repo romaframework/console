@@ -14,5 +14,7 @@ public @interface ConsoleClass {
 	public String name() default AnnotationConstants.DEF_VALUE;
 
 	public String description() default AnnotationConstants.DEF_VALUE;
+	
+	public String defaultAction() default AnnotationConstants.DEF_VALUE;
 
 }
