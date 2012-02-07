@@ -17,7 +17,7 @@ public class ClassCommands {
 
 	public ClassCommands(SchemaClass schemaClass) {
 		for (SchemaAction action : schemaClass.getActions().values()) {
-			ActionCommand comm = new ActionCommand(action,this);
+			ActionCommand comm = new ActionCommand(action, this);
 			Map<Integer, ActionCommand> maps = actionsMap.get(comm.getName());
 			if (maps == null) {
 				maps = new HashMap<Integer, ActionCommand>();
@@ -57,5 +57,18 @@ public class ClassCommands {
 			name = this.schemaClass.getName();
 		}
 		return name;
+	}
+
+	public ActionCommand getDefaultAction(String[] args, int i) {
+		String defaultAction = getSchemaClass().getFeature(ConsoleClassFeatures.DEFAULT_ACTION);
+		ActionCommand commandAction = getAction(defaultAction, i);
+		if (commandAction == null) {
+			Map<Integer, ActionCommand> maps = actionsMap.get(defaultAction);
+			commandAction = maps.get(1);
+			if (commandAction != null && !commandAction.getAction().getParameterIterator().next().getType().isAssignableAs(String[].class)) {
+				return null;
+			}
+		}
+		return commandAction;
 	}
 }

@@ -111,20 +111,23 @@ public class DefaultConsoleAspect extends SelfRegistrantModule implements Consol
 			if (args.length != 0) {
 				ClassCommands command = commands.get(args[0]);
 				if (command == null) {
-					log.warn("Not found class <" + args[0]+">");
+					log.warn("Not found class <" + args[0] + ">");
 				} else {
 					ActionCommand commandAction = null;
 					int subLength = 2;
 					if (args.length > 1)
 						commandAction = command.getAction(args[1], args.length - subLength);
 					if (commandAction == null) {
-						if (args.length > 1)
-							log.warn("Not found action <" + args[1] + "> with " + (args.length - subLength) + " arguments in class <" + args[0] + "> ");
 						if (command.getSchemaClass().isSettedFeature(ConsoleClassFeatures.DEFAULT_ACTION)) {
 							subLength--;
-							commandAction = command.getAction(command.getSchemaClass().getFeature(ConsoleClassFeatures.DEFAULT_ACTION), args.length - subLength);
+							commandAction = command.getDefaultAction(args, args.length - subLength);
+							if (commandAction == null) {
+								log.warn("Not found action <" + command.getSchemaClass().getFeature(ConsoleClassFeatures.DEFAULT_ACTION) + "> with " + (args.length - subLength)
+										+ " arguments in class <" + args[0] + "> ");
+							}
 						} else {
-							log.warn("Not exist default action in class <" + args[0] + ">");
+							if (args.length > 1)
+								log.warn("Not found action <" + args[1] + "> with " + (args.length - 2) + " arguments in class <" + args[0] + "> ");
 						}
 					}
 					if (commandAction != null) {
@@ -233,14 +236,23 @@ public class DefaultConsoleAspect extends SelfRegistrantModule implements Consol
 	public String buildHelp() {
 		StringBuilder builder = new StringBuilder();
 		for (ClassCommands command : commands.values()) {
-			builder.append(command.getName()).append(" ");
-			if (command.getSchemaClass().getFeature(ConsoleClassFeatures.DESCRIPTION) != null)
-				builder.append(command.getSchemaClass().getFeature(ConsoleClassFeatures.DESCRIPTION));
-			builder.append("\n\t");
+			if (command.getSchemaClass().isSettedFeature(ConsoleClassFeatures.DESCRIPTION))
+				builder.append(command.getSchemaClass().getFeature(ConsoleClassFeatures.DESCRIPTION)).append("\n");
+
 			for (ActionCommand action : command.getActions()) {
-				builder.append(" ").append(action.getName());
+				builder.append("- ").append(command.getName()).append(" ");
+				builder.append(action.getName()).append(" ");
+				for (SchemaParameter parameter : action.getAction().getParameters().values()) {
+					String pName = parameter.getFeature(ConsoleParameterFeatures.NAME);
+					if (pName == null) {
+						pName = parameter.getType().getName();
+					}
+					builder.append("<").append(pName).append("> ");
+				}
+				if (action.getAction().isSettedFeature(ConsoleActionFeatures.DESCRIPTION))
+					builder.append(" -> ").append(action.getAction().getFeature(ConsoleActionFeatures.DESCRIPTION));
+				builder.append("\n");
 			}
-			builder.append("\n");
 		}
 		return builder.toString();
 	}
@@ -248,9 +260,19 @@ public class DefaultConsoleAspect extends SelfRegistrantModule implements Consol
 	public String buildHelpCommandGroup(String className) {
 		StringBuilder builder = new StringBuilder();
 		ClassCommands command = commands.get(className);
+		if (command.getSchemaClass().isSettedFeature(ConsoleClassFeatures.DESCRIPTION))
+			builder.append(command.getSchemaClass().getFeature(ConsoleClassFeatures.DESCRIPTION)).append("\n");
+
 		for (ActionCommand action : command.getActions()) {
-			builder.append(action.getName());
-			builder.append(" ").append(action.getAction().getFeature(ConsoleActionFeatures.DESCRIPTION)).append("\n\r");
+			builder.append("- ").append(command.getName()).append(" ").append(action.getName()).append(" ");
+			for (SchemaParameter parameter : action.getAction().getParameters().values()) {
+				String pName = parameter.getFeature(ConsoleParameterFeatures.NAME);
+				if (pName == null) {
+					pName = parameter.getType().getName();
+				}
+				builder.append("<").append(pName).append("> ");
+			}
+			builder.append("\n");
 		}
 		return builder.toString();
 	}
@@ -266,13 +288,16 @@ public class DefaultConsoleAspect extends SelfRegistrantModule implements Consol
 			return buildHelpCommandGroup(className);
 		} else {
 			for (ActionCommand ac : actions.values()) {
+				builder.append(command.getName()).append(" ").append(ac.getName()).append(" -> ").append(ac.getAction().getFeature(ConsoleActionFeatures.DESCRIPTION)).append("\n");
 				for (SchemaParameter parameter : ac.getAction().getParameters().values()) {
 					String pName = parameter.getFeature(ConsoleParameterFeatures.NAME);
 					if (pName == null) {
 						pName = parameter.getType().getName();
 					}
-					builder.append(pName);
-					builder.append(" ").append(parameter.getFeature(ConsoleParameterFeatures.DESCRIPTION)).append("\n\r");
+					builder.append("\t<").append(pName).append(">");
+					if (parameter.isSettedFeature(ConsoleParameterFeatures.DESCRIPTION))
+						builder.append(" -> ").append(parameter.getFeature(ConsoleParameterFeatures.DESCRIPTION));
+					builder.append("\n");
 				}
 			}
 			return builder.toString();
