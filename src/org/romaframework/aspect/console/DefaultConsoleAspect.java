@@ -79,8 +79,11 @@ public class DefaultConsoleAspect extends SelfRegistrantModule implements Consol
 		List<SchemaClass> classes = Roma.schema().getSchemaClassesByPackage(pack);
 
 		for (SchemaClass clazz : classes) {
-			ClassCommands comm = new ClassCommands(clazz.getSchemaClass());
-			commands.put(comm.getName(), comm);
+			Class<?> cc = ((Class<?>) clazz.getLanguageType());
+			if (!cc.isMemberClass() && !cc.isAnonymousClass() && !cc.isLocalClass()) {
+				ClassCommands comm = new ClassCommands(clazz.getSchemaClass());
+				commands.put(comm.getName(), comm);
+			}
 		}
 
 	}
@@ -108,34 +111,29 @@ public class DefaultConsoleAspect extends SelfRegistrantModule implements Consol
 			if (args.length != 0) {
 				ClassCommands command = commands.get(args[0]);
 				if (command == null) {
-					log.warn("Not Found command:" + args[0]);
+					log.warn("Not found class <" + args[0]+">");
 				} else {
 					ActionCommand commandAction = null;
 					int subLength = 2;
 					if (args.length > 1)
-						commandAction = command.getAction(args[1], args.length - 2);
-					else
-						subLength--;
-					if (commandAction == null) {
-						commandAction = command.getAction(command.getSchemaClass().getFeature(ConsoleClassFeatures.DEFAULT_ACTION), args.length - subLength);
-					}
+						commandAction = command.getAction(args[1], args.length - subLength);
 					if (commandAction == null) {
 						if (args.length > 1)
-							log.warn("Not Found command:" + args[1] + " in command: " + args[0]);
-						else
-							log.warn("Not Default command in command: " + args[0]);
-					} else {
-						SchemaAction action = commandAction.getAction();
-						if (action.getParameterNumber() != args.length - subLength) {
-							log.warn("Wrong number of arguments was:" + args.length + " expected:" + (action.getParameterNumber() + subLength));
+							log.warn("Not found action <" + args[1] + "> with " + (args.length - subLength) + " arguments in class <" + args[0] + "> ");
+						if (command.getSchemaClass().isSettedFeature(ConsoleClassFeatures.DEFAULT_ACTION)) {
+							subLength--;
+							commandAction = command.getAction(command.getSchemaClass().getFeature(ConsoleClassFeatures.DEFAULT_ACTION), args.length - subLength);
 						} else {
-							Object[] actionArgs = new Object[action.getParameterNumber()];
-							System.arraycopy(args, subLength, actionArgs, 0, action.getParameterNumber());
-							try {
-								action.invoke(command.getSchemaClass().newInstance(), actionArgs);
-							} catch (Exception e) {
-								log.error("Error on execute command:" + command, e);
-							}
+							log.warn("Not exist default action in class <" + args[0] + ">");
+						}
+					}
+					if (commandAction != null) {
+						String[] actionArgs = new String[args.length - subLength];
+						System.arraycopy(args, subLength, actionArgs, 0, args.length - subLength);
+						try {
+							commandAction.execute(actionArgs);
+						} catch (Exception e) {
+							log.error("Error on execute command:" + command, e);
 						}
 					}
 				}
@@ -270,7 +268,7 @@ public class DefaultConsoleAspect extends SelfRegistrantModule implements Consol
 			for (ActionCommand ac : actions.values()) {
 				for (SchemaParameter parameter : ac.getAction().getParameters().values()) {
 					String pName = parameter.getFeature(ConsoleParameterFeatures.NAME);
-					if (pName != null) {
+					if (pName == null) {
 						pName = parameter.getType().getName();
 					}
 					builder.append(pName);

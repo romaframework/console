@@ -17,7 +17,7 @@ public class ClassCommands {
 
 	public ClassCommands(SchemaClass schemaClass) {
 		for (SchemaAction action : schemaClass.getActions().values()) {
-			ActionCommand comm = new ActionCommand(action);
+			ActionCommand comm = new ActionCommand(action,this);
 			Map<Integer, ActionCommand> maps = actionsMap.get(comm.getName());
 			if (maps == null) {
 				maps = new HashMap<Integer, ActionCommand>();

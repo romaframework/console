@@ -6,12 +6,14 @@ import org.romaframework.core.schema.reflection.SchemaActionReflection;
 
 public class ActionCommand {
 	private SchemaAction	action;
-	
-	public ActionCommand(SchemaAction action) {
-		this.action =action;
+	private ClassCommands	container;
+
+	public ActionCommand(SchemaAction action, ClassCommands classCommands) {
+		this.action = action;
+		this.container = classCommands;
 	}
-	
-	public String getName(){
+
+	public String getName() {
 		String name;
 		if (action.isSettedFeature(ConsoleActionFeatures.NAME)) {
 			name = action.getFeature(ConsoleActionFeatures.NAME);
@@ -20,8 +22,15 @@ public class ActionCommand {
 		}
 		return name;
 	}
-	
+
 	public SchemaAction getAction() {
 		return action;
+	}
+
+	public void execute(String[] actionArgs) throws Exception {
+		if (action.getParameterNumber() == 1 && action.getParameterIterator().next().getType().isAssignableAs(String[].class))
+			action.invoke(container.getSchemaClass().newInstance(), new Object[] { actionArgs });
+		else
+			action.invoke(container.getSchemaClass().newInstance(), (Object[]) actionArgs);
 	}
 }
