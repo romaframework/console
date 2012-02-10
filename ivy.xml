@@ -11,7 +11,6 @@
 		<artifact name="roma-console" ext="jar" type="jar" conf="default"></artifact>
 		<artifact name="roma-console-test" ext="jar" type="jar" conf="test"></artifact>
 		<artifact name="roma-console-wizard" ext="zip" type="zip" conf="wizard"></artifact>
-		<artifact name="roma-console" ext="pom" type="pom" conf="publish"></artifact>
 	</publications>
 	<dependencies>
 		<dependency org="org.romaframework" name="roma-core" rev="latest.integration" conf="*->default;wizard->wizard" />
