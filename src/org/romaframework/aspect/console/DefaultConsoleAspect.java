@@ -34,42 +34,33 @@ public class DefaultConsoleAspect extends SelfRegistrantModule implements Consol
 	private Map<String, ClassCommands>	commands	= new HashMap<String, ClassCommands>();
 	private Mode												mode;
 
-	@Override
 	public String aspectName() {
 		return ASPECT_NAME;
 	}
 
-	@Override
 	public void beginConfigClass(SchemaClassDefinition iClass) {
 	}
 
-	@Override
 	public void configClass(SchemaClassDefinition iClass) {
 	}
 
-	@Override
 	public void configField(SchemaField iField) {
 	}
 
-	@Override
 	public void configAction(SchemaAction iAction) {
 	}
 
-	@Override
 	public void configEvent(SchemaEvent iEvent) {
 	}
 
-	@Override
 	public void endConfigClass(SchemaClassDefinition iClass) {
 
 	}
 
-	@Override
 	public Object getUnderlyingComponent() {
 		return null;
 	}
 
-	@Override
 	public void startup() throws RuntimeException {
 		SchemaClassResolver classResolver = Roma.component(SchemaClassResolver.class);
 		String pack = Utility.getApplicationAspectPackage(aspectName());
@@ -88,12 +79,10 @@ public class DefaultConsoleAspect extends SelfRegistrantModule implements Consol
 
 	}
 
-	@Override
 	public void shutdown() throws RuntimeException {
 
 	}
 
-	@Override
 	public void execute(String[] args) {
 		boolean exit;
 		if (mode == Mode.INLINE) {
@@ -220,7 +209,6 @@ public class DefaultConsoleAspect extends SelfRegistrantModule implements Consol
 
 	}
 
-	@Override
 	public String moduleName() {
 		return ASPECT_NAME;
 	}

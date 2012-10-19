@@ -1,6 +1,3 @@
-/build
-/dist
 /.settings
-/lib
-/roma-build.xml
+/target
 

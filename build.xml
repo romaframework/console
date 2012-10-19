@@ -1,8 +1,0 @@
-<?xml version="1.0" encoding="utf-8"?>
-<project basedir="." name="roma-console" default="compile" >
-	<property name="ivy.pom.name" value="Roma Console" />
-	<property name="ivy.pom.description" value="Roma Framework module for build console application" />
-	<property name="ivy.pom.repo-name" value="console" />
-	<get src="https://github.com/romaframework/core/raw/master/roma-build.xml" dest="roma-build.xml" skipexisting="true" />
-	<import file="roma-build.xml" />
-</project>
