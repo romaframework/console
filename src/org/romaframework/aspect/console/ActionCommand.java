@@ -15,7 +15,7 @@ public class ActionCommand {
 
 	public String getName() {
 		String name;
-		if (action.isSettedFeature(ConsoleActionFeatures.NAME)) {
+		if (action.isSetFeature(ConsoleActionFeatures.NAME)) {
 			name = action.getFeature(ConsoleActionFeatures.NAME);
 		} else {
 			name = ((SchemaActionReflection) action).getMethod().getName();

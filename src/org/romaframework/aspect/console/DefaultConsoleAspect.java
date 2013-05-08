@@ -16,12 +16,8 @@ import org.romaframework.aspect.console.feature.ConsoleParameterFeatures;
 import org.romaframework.core.Roma;
 import org.romaframework.core.Utility;
 import org.romaframework.core.module.SelfRegistrantModule;
-import org.romaframework.core.schema.SchemaAction;
 import org.romaframework.core.schema.SchemaClass;
-import org.romaframework.core.schema.SchemaClassDefinition;
 import org.romaframework.core.schema.SchemaClassResolver;
-import org.romaframework.core.schema.SchemaEvent;
-import org.romaframework.core.schema.SchemaField;
 import org.romaframework.core.schema.SchemaParameter;
 
 public class DefaultConsoleAspect extends SelfRegistrantModule implements ConsoleAspect {
@@ -36,25 +32,6 @@ public class DefaultConsoleAspect extends SelfRegistrantModule implements Consol
 
 	public String aspectName() {
 		return ASPECT_NAME;
-	}
-
-	public void beginConfigClass(SchemaClassDefinition iClass) {
-	}
-
-	public void configClass(SchemaClassDefinition iClass) {
-	}
-
-	public void configField(SchemaField iField) {
-	}
-
-	public void configAction(SchemaAction iAction) {
-	}
-
-	public void configEvent(SchemaEvent iEvent) {
-	}
-
-	public void endConfigClass(SchemaClassDefinition iClass) {
-
 	}
 
 	public Object getUnderlyingComponent() {
@@ -107,7 +84,7 @@ public class DefaultConsoleAspect extends SelfRegistrantModule implements Consol
 					if (args.length > 1)
 						commandAction = command.getAction(args[1], args.length - subLength);
 					if (commandAction == null) {
-						if (command.getSchemaClass().isSettedFeature(ConsoleClassFeatures.DEFAULT_ACTION)) {
+						if (command.getSchemaClass().isSetFeature(ConsoleClassFeatures.DEFAULT_ACTION)) {
 							subLength--;
 							commandAction = command.getDefaultAction(args, args.length - subLength);
 							if (commandAction == null) {
@@ -224,7 +201,7 @@ public class DefaultConsoleAspect extends SelfRegistrantModule implements Consol
 	public String buildHelp() {
 		StringBuilder builder = new StringBuilder();
 		for (ClassCommands command : commands.values()) {
-			if (command.getSchemaClass().isSettedFeature(ConsoleClassFeatures.DESCRIPTION))
+			if (command.getSchemaClass().isSetFeature(ConsoleClassFeatures.DESCRIPTION))
 				builder.append(command.getSchemaClass().getFeature(ConsoleClassFeatures.DESCRIPTION)).append("\n");
 
 			for (ActionCommand action : command.getActions()) {
@@ -237,7 +214,7 @@ public class DefaultConsoleAspect extends SelfRegistrantModule implements Consol
 					}
 					builder.append("<").append(pName).append("> ");
 				}
-				if (action.getAction().isSettedFeature(ConsoleActionFeatures.DESCRIPTION))
+				if (action.getAction().isSetFeature(ConsoleActionFeatures.DESCRIPTION))
 					builder.append(" -> ").append(action.getAction().getFeature(ConsoleActionFeatures.DESCRIPTION));
 				builder.append("\n");
 			}
@@ -248,7 +225,7 @@ public class DefaultConsoleAspect extends SelfRegistrantModule implements Consol
 	public String buildHelpCommandGroup(String className) {
 		StringBuilder builder = new StringBuilder();
 		ClassCommands command = commands.get(className);
-		if (command.getSchemaClass().isSettedFeature(ConsoleClassFeatures.DESCRIPTION))
+		if (command.getSchemaClass().isSetFeature(ConsoleClassFeatures.DESCRIPTION))
 			builder.append(command.getSchemaClass().getFeature(ConsoleClassFeatures.DESCRIPTION)).append("\n");
 
 		for (ActionCommand action : command.getActions()) {
@@ -283,7 +260,7 @@ public class DefaultConsoleAspect extends SelfRegistrantModule implements Consol
 						pName = parameter.getType().getName();
 					}
 					builder.append("\t<").append(pName).append(">");
-					if (parameter.isSettedFeature(ConsoleParameterFeatures.DESCRIPTION))
+					if (parameter.isSetFeature(ConsoleParameterFeatures.DESCRIPTION))
 						builder.append(" -> ").append(parameter.getFeature(ConsoleParameterFeatures.DESCRIPTION));
 					builder.append("\n");
 				}

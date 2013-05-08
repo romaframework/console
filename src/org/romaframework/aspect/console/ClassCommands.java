@@ -51,7 +51,7 @@ public class ClassCommands {
 
 	public String getName() {
 		String name;
-		if (this.schemaClass.isSettedFeature(ConsoleClassFeatures.NAME)) {
+		if (this.schemaClass.isSetFeature(ConsoleClassFeatures.NAME)) {
 			name = this.schemaClass.getFeature(ConsoleClassFeatures.NAME);
 		} else {
 			name = this.schemaClass.getName();
